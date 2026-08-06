@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+assets/fonts/*.otf
+assets/fonts/*.ttf
+assets/bgm/*.mp3
+assets/bgm/*.ogg
+projects/
