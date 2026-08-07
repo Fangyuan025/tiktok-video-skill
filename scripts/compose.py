@@ -155,7 +155,11 @@ def final_mux(paths, sb, total_dur):
     video = paths["work"] / "video_full.mp4"
     vo = paths["work"] / "vo.wav"
     bgm = next(paths["root"].glob("bgm.*"), None)
-    has_bgm = bgm is not None and sb["bgm"].get("mood") != "none"
+    wants_bgm = sb["bgm"].get("mood") != "none" or sb["bgm"].get("file")
+    if wants_bgm and bgm is None:
+        die("storyboard wants BGM but no bgm.* file in project — run scripts/bgm.py first "
+            "(or set bgm mood to \"none\")")
+    has_bgm = bgm is not None and wants_bgm
     cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-i", video, "-i", vo]
     if has_bgm:
         gain = sb["bgm"].get("gain_db", -16)
