@@ -26,7 +26,8 @@ capable AI agent — Claude Code, Cursor, Codex CLI, Gemini CLI, OpenCode and mo
 - 1080×1920 (or 16:9 / 1:1), 30 fps, H.264 + AAC, loudness normalized to −15 LUFS
 - Marketing-account style: big hook title in the first seconds → word-by-word
   highlighted captions → Ken Burns motion → BGM sidechain-ducked under the voice → CTA ending
-- **Zero API keys required**: assets from Openverse, Wikimedia Commons and NASA;
+- **Zero API keys required**: real video clips from Wikimedia Commons, NASA and
+  the Prelinger Archives, plus images from Openverse/Wikimedia/NASA;
   music by Kevin MacLeod (CC-BY, mirrored on Wikimedia Commons).
   Optional free `PEXELS_API_KEY` / `PIXABAY_API_KEY` unlock real stock video clips
 - An attribution block for CC sources, generated automatically

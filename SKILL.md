@@ -93,7 +93,7 @@ Field reference:
 | `sfx` | `true` (default) \| `false` | whoosh sound on scene transitions |
 | scene `keywords` | list of **English, concrete-noun** queries | **each entry = one shot (visual)**; the video cuts to a new visual every ~3s, so give 2–3 queries for scenes longer than ~4s (extra shots are auto-added cycling your queries if you give fewer) |
 | scene `badge` | e.g. `"第1名"` / `"TOP 1"` | big stamped label shown at the scene start — use for listicles |
-| scene `providers` | list | keyless: `openverse` `wikimedia` `nasa`; with keys: `pexels_video` `pexels_photo` `pixabay_video` |
+| scene `providers` | list | keyless images: `openverse` `wikimedia` `nasa`; **keyless real video**: `wikimedia_video` (Commons clips, server transcodes) `nasa_video` (PD space/science) `archive_video` (Prelinger public-domain historical film); with keys: `pexels_video` `pexels_photo` `pixabay_video` |
 | scene `effect` | `auto` `kb_in` `kb_out` `pan_left` `pan_right` `static` | first shot's Ken Burns motion; later shots auto-cycle |
 | scene `emphasis` | list of substrings | permanently highlighted words (pop style) |
 | scene `media` | file path | bypass search, use your own file (e.g. one you downloaded yourself) |
@@ -154,6 +154,12 @@ user together with `final.mp4`.
 - Add a context word to disambiguate: "NOAA", "museum", "aquarium", "macro".
 - If a scene keeps failing, change the visual concept, not just the words
   (e.g. for "5% explored" show a diver silhouette, not "statistics").
+- `wikimedia_video` searches support negative terms — Commons weather/space
+  queries drown in satellite loops, so write e.g. `"lightning storm -CIRA
+  -satellite -JPSS"`. Non-English words unlock extra footage ("Blitz
+  Gewitter", "tormenta rayos"). Prefer named subjects ("Fagradalsfjall lava
+  drone") over generic nouns, and always eyeball video thumbs in the sheet:
+  watch out for burned-in captions, watermarks, tutorials and CGI promos.
 
 ### Troubleshooting
 

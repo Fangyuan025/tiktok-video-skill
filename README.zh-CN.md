@@ -25,7 +25,7 @@
 - 1080×1920(或 16:9 / 1:1)、30fps、H.264 + AAC、响度标准化 -15 LUFS
 - 营销号风格:前 3 秒大字 Hook 标题 → 逐字高亮字幕 → Ken Burns 动效 →
   BGM 自动闪避人声 → 结尾 CTA
-- **零 API key 可用**:素材来自 Openverse、Wikimedia Commons、NASA;
+- **零 API key 可用**:实拍视频来自 Wikimedia Commons、NASA、Prelinger 档案馆,图片来自 Openverse/Wikimedia/NASA;
   音乐为 Kevin MacLeod (CC-BY,Wikimedia Commons 镜像)。
   可选免费 `PEXELS_API_KEY` / `PIXABAY_API_KEY`,自动启用实拍视频素材
 - 自动生成 CC 素材署名文本,合规使用
