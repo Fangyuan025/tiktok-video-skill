@@ -43,7 +43,6 @@ pacing, scene structure). Then create `projects/<slug>/storyboard.json`:
   "caption_style": "karaoke",
   "bgm": {"mood": "mystery", "gain_db": -16},
   "hook": {"text": "深海禁区", "seconds": 2.3},
-  "sticky_title": {"text": "深海最诡异生物 TOP5"},
   "scenes": [
     {
       "text": "你知道吗?在阳光永远照不到的深海,藏着比科幻电影更诡异的生物。",
@@ -72,7 +71,7 @@ Field reference:
 | `caption_style` | `karaoke` \| `pop` \| `none` | karaoke = word-by-word highlight (recommended) |
 | `bgm` | `{"mood": ...}` \| `{"file": "path.mp3"}` \| `{"mood":"none"}` | moods: upbeat funny inspiring chill tech mystery epic sad horror |
 | `hook` | `{"text","seconds"}` | big top title card shown at the start, ≤ 8 chars/words |
-| `sticky_title` | `{"text": ...}` | small persistent topic bar at the top for the whole video |
+| `sticky_title` | `{"text": ...}` | optional persistent topic bar at the top; off by default — only add if the user asks for one |
 | `sfx` | `true` (default) \| `false` | whoosh sound on scene transitions |
 | scene `keywords` | list of **English, concrete-noun** queries | **each entry = one shot (visual)**; the video cuts to a new visual every ~3s, so give 2–3 queries for scenes longer than ~4s (extra shots are auto-added cycling your queries if you give fewer) |
 | scene `badge` | e.g. `"第1名"` / `"TOP 1"` | big stamped label shown at the scene start — use for listicles |

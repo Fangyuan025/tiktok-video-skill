@@ -30,7 +30,6 @@ Total 30–60s. One idea per scene. Never explain — assert.
 - 每个场景给 **2–3 个 keywords**(= 2–3 个镜头),画面每 ~3 秒切换一次;
   只给 1 个 keyword 的长场景会显得单调。
 - 每个场景结尾留半拍悬念,把观众推向下一句。
-- 加 `sticky_title`(顶部常驻主题条),清单/盘点类效果尤佳。
 - CTA 固定收尾: "关注我,带你看更多XX" / "Follow for more XX you won't believe."
 
 ## 语音 / Voice choices
