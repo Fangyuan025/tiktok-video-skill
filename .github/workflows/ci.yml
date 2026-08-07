@@ -17,6 +17,10 @@ jobs:
         run: python -m compileall -q scripts
       - name: Shell syntax check
         run: bash -n scripts/setup.sh
+      - name: Asset content-dedupe test (no network)
+        run: |
+          pip install -q pillow requests
+          python tests/test_dedupe.py
       - name: Caption grouping smoke test (no network)
         run: |
           pip install -q pillow
