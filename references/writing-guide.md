@@ -71,6 +71,8 @@ keywords for a *specific photographable subject*:
 
 ## 质量红线 / Quality bar (reject your own draft if…)
 
+- **任何数字/纪录/"最"字论断没有经过联网核实**(模型记忆会过期、会错;
+  按来源改写文案,核实不了就删,来源 URL 记入 `sources`)
 - Hook 前 3 秒没有制造"必须看下去"的理由
 - 任何场景的画面与文案无关(观众 0.5 秒就会划走)
 - 总时长 > 70s 或 < 20s;字幕一行超过 10 个汉字

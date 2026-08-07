@@ -130,6 +130,9 @@ def main(project_dir):
         "== attribution (paste into video description) ==",
         bgm_credit,
         *credits,
+        *(["", "== fact-check sources (script claims verified against) =="]
+          + [f"  - {s}" for s in sb.get("sources", [])] if sb.get("sources") else
+          ["", "[!] no fact-check sources recorded — verify script claims before publishing"]),
     ]
     report = "\n".join(lines)
     (paths["review"] / "report.txt").write_text(report)

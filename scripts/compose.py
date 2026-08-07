@@ -122,12 +122,18 @@ def plan_timeline(sb, timing, manifest, beats_info):
             prev = 0
             for k in range(1, n_shots):
                 ideal_abs = cum + scene_dur * k / n_shots
-                cands = [b for b in beats
-                         if abs(b - ideal_abs) <= 0.52 * period and cum < b < cum + scene_dur]
-                target = min(cands, key=lambda b: abs(b - ideal_abs)) if cands else ideal_abs
-                f = round((target - cum) * fps)
-                f = max(f, prev + min_f)
-                f = min(f, frames - (n_shots - k) * min_f)
+                lo_f = prev + min_f
+                hi_f = frames - (n_shots - k) * min_f
+                # only beats that keep every remaining shot >= MIN_SHOT qualify;
+                # snapping first and clamping after would land off-beat
+                cands = [round((b - cum) * fps) for b in beats
+                         if cum < b < cum + scene_dur
+                         and lo_f <= round((b - cum) * fps) <= hi_f]
+                ideal_f = round((ideal_abs - cum) * fps)
+                if cands:
+                    f = min(cands, key=lambda x: abs(x - ideal_f))
+                else:
+                    f = max(lo_f, min(ideal_f, hi_f))
                 bounds.append(f)
                 prev = f
             edges = [0] + bounds + [frames]

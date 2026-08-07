@@ -28,7 +28,23 @@ env vars unlock real stock video clips (better) when present.
 bash scripts/setup.sh
 ```
 
-### 1. Write the script + storyboard
+### 1. VERIFY FACTS FIRST, then write the script + storyboard
+
+**Your internal knowledge may be outdated or wrong — never put an unverified
+claim in a video.** Before writing any scene text, use your web search tool to
+check every concrete claim: numbers, statistics, records, prices, dates,
+rankings, and every "first / biggest / only / fastest" statement — and
+anything time-sensitive (news, products, versions, "今年/最新") regardless of
+how confident you feel. Rules:
+
+- A claim goes into the script **only as a source states it** — adjust your
+  wording to the source, not the other way around.
+- Can't verify it? Replace it with a claim you can, or cut it. A wrong number
+  in a published video is worse than a weaker hook.
+- Record the URLs you relied on in the storyboard's `"sources": [...]` —
+  they are echoed in `review/report.txt` so the user can audit the video.
+- If you genuinely have no web access, stick to long-established textbook
+  facts, avoid specific figures, and tell the user the video is unverified.
 
 Read `references/writing-guide.md` for the script formulas (hook types,
 pacing, scene structure). Then create `projects/<slug>/storyboard.json`:
@@ -111,6 +127,12 @@ tool and judge them like a human editor:**
    (Refetching automatically blacklists the rejected asset. Repeat until all
    scenes match. You may also download an image yourself with your own tools
    and point scene `media` at it.)
+
+   The pipeline also text-audits every shot's source title against its query
+   and prints `[!] OFF-TOPIC` flags. If you **visually confirmed** a flagged
+   shot is actually right (e.g. an untitled but perfect photo), set
+   `"approved": true` on that shot in `media/manifest.json` to clear it —
+   your eyes outrank the text audit. Never blind-approve.
 
 2. `projects/<slug>/review/contact_sheet.jpg` — after compose+check.
    Verify: captions readable & synced, no wrong/ugly frames, hook visible.
