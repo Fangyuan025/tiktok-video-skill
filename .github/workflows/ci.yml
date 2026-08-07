@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile all pipeline scripts
+        run: python -m compileall -q scripts
+      - name: Shell syntax check
+        run: bash -n scripts/setup.sh
+      - name: Caption grouping smoke test (no network)
+        run: |
+          pip install -q pillow
+          python - <<'EOF'
+          import sys
+          sys.path.insert(0, "scripts")
+          from captions import group_words
+          words = [
+              {"w": "你", "t0": 0.1, "t1": 0.2}, {"w": "知道", "t0": 0.2, "t1": 0.5},
+              {"w": "吗", "t0": 0.5, "t1": 0.6}, {"w": "深海", "t0": 1.0, "t1": 1.4},
+              {"w": "藏着", "t0": 1.4, "t1": 1.8}, {"w": "秘密", "t0": 1.8, "t1": 2.2},
+          ]
+          lines = group_words("你知道吗?深海藏着秘密。", words, "zh")
+          assert len(lines) >= 2, lines
+          assert lines[0]["text"] == "你知道吗", lines
+          en = [
+              {"w": "Space", "t0": 0.1, "t1": 0.4}, {"w": "is", "t0": 0.4, "t1": 0.5},
+              {"w": "weird", "t0": 0.5, "t1": 0.9}, {"w": "and", "t0": 0.9, "t1": 1.0},
+              {"w": "huge", "t0": 1.0, "t1": 1.4},
+          ]
+          lines = group_words("Space is weird and huge.", en, "en")
+          assert sum(len(l["words"]) for l in lines) == 5, lines
+          print("caption grouping OK")
+          EOF

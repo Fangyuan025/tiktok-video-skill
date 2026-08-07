@@ -1,92 +1,113 @@
-# tiktok-video — 一键生成抖音/TikTok 短视频的通用 Agent Skill
+# tiktok-video — one-shot TikTok/Douyin video generation skill for AI agents
 
-**One-line brief in → finished vertical video out.** An [Agent Skills](https://code.claude.com/docs/en/skills)-standard
-skill that lets ANY capable AI agent (Claude Code, Cursor, Codex CLI, Gemini CLI, OpenCode…)
-produce complete, publish-ready TikTok / 抖音 / Shorts / Reels videos:
+**English** | [简体中文](README.zh-CN.md)
 
-> 用户一句话需求 → agent 写文案分镜 → 自动联网搜索并下载素材 → TTS 配音(中/英)→
-> 逐字卡拉OK字幕 → 配乐 + 响度标准化 → 直出 1080×1920 成片 MP4
+[![CI](https://github.com/Fangyuan025/tiktok-video-skill/actions/workflows/ci.yml/badge.svg)](https://github.com/Fangyuan025/tiktok-video-skill/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Agent Skills](https://img.shields.io/badge/Agent%20Skills-SKILL.md-blueviolet)](https://code.claude.com/docs/en/skills)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
+[![API keys](https://img.shields.io/badge/API%20keys-optional-success)](#faq)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](https://github.com/Fangyuan025/tiktok-video-skill/pulls)
 
-<table><tr>
-<td>🎬 端到端全自动</td>
-<td>🆓 <b>零 API key 可用</b>(可选 Pexels/Pixabay key 升级实拍视频素材)</td>
-<td>🌏 中英双语</td>
-</tr></table>
+**One-line brief in → publish-ready vertical video out.** A skill following the
+[Agent Skills](https://code.claude.com/docs/en/skills) open standard, usable by any
+capable AI agent — Claude Code, Cursor, Codex CLI, Gemini CLI, OpenCode and more:
 
-## 效果 / What it makes
+> user brief → agent writes the script & storyboard → searches and downloads
+> free stock assets → TTS voiceover (Chinese & English) → word-level karaoke
+> captions → background music with voice ducking → final 1080×1920 MP4
 
-- 1080×1920(或 16:9 / 1:1)、30fps、H.264 + AAC、响度 -15 LUFS(平台标准)
-- 营销号风格:前 3 秒大字 Hook 标题 → 逐字高亮字幕 → Ken Burns 动效 → BGM 自动闪避人声 → 结尾 CTA
-- 免费素材源:Openverse (Flickr/博物馆)、Wikimedia Commons、NASA;音乐:Kevin MacLeod (CC-BY)
-- 自动生成素材署名文本,合规使用 CC 素材
+![preview](docs/preview.jpg)
 
-## 安装 / Install
+*Frames from three fully auto-generated test videos (zh karaoke captions / en NASA imagery / zh pop captions with emphasis).*
 
-需要 `ffmpeg`(任意常规构建,无需 libass)和 `python3`:
+## What it produces
+
+- 1080×1920 (or 16:9 / 1:1), 30 fps, H.264 + AAC, loudness normalized to −15 LUFS
+- Marketing-account style: big hook title in the first seconds → word-by-word
+  highlighted captions → Ken Burns motion → BGM sidechain-ducked under the voice → CTA ending
+- **Zero API keys required**: assets from Openverse, Wikimedia Commons and NASA;
+  music by Kevin MacLeod (CC-BY, mirrored on Wikimedia Commons).
+  Optional free `PEXELS_API_KEY` / `PIXABAY_API_KEY` unlock real stock video clips
+- An attribution block for CC sources, generated automatically
+
+## Install
+
+Requires `ffmpeg` (any regular build — no libass needed) and `python3`.
 
 ```bash
 # Claude Code
-git clone <this-repo> ~/.claude/skills/tiktok-video
-# 其他支持 SKILL.md 标准的 agent:clone 到其对应 skills 目录即可
+git clone https://github.com/Fangyuan025/tiktok-video-skill ~/.claude/skills/tiktok-video
+# any other SKILL.md-compatible agent: clone into its skills directory
 ```
 
-首次使用时 agent 会自动运行 `bash scripts/setup.sh`(创建 venv、安装
-edge-tts/requests/pillow、下载 Noto CJK 字体)。
+The agent runs `bash scripts/setup.sh` on first use (venv, edge-tts/requests/pillow,
+Noto CJK font download).
 
-可选环境变量:`PEXELS_API_KEY`、`PIXABAY_API_KEY`(免费申请),有 key 时自动优先使用实拍视频片段。
+## Use
 
-## 使用 / Use
+Tell your agent:
 
-对你的 agent 说:
-
-> 帮我做一个关于「深海最诡异的生物」的抖音短视频
->
 > Make me a TikTok video about 3 mind-blowing space facts
+>
+> 帮我做一个关于「深海最诡异的生物」的抖音短视频
 
-Agent 会按 [SKILL.md](SKILL.md) 的流程:写分镜 → 跑管线 → **用视觉审查素材和成片**(这一步
-是达到营销号质量的关键)→ 交付 `final.mp4` + 署名文本。
+The agent follows [SKILL.md](SKILL.md): write the storyboard → run the pipeline →
+**visually review assets and the final cut** (this review loop is what makes the
+quality) → deliver `final.mp4` plus the attribution text.
 
-也可以完全手动使用(不依赖任何 agent):
+Fully manual use (no agent required):
 
 ```bash
 bash scripts/setup.sh
-cp examples/deep-sea-zh.json projects/my-video/storyboard.json   # 编辑它
+mkdir -p projects/my-video
+cp examples/space-facts-en.json projects/my-video/storyboard.json   # edit it
 .venv/bin/python scripts/pipeline.py projects/my-video
 open projects/my-video/final.mp4
 ```
 
-## 架构 / How it works
+## How it works
 
+```mermaid
+flowchart LR
+    A["storyboard.json<br/>(agent-written: script, scenes,<br/>keywords, style)"] --> B["tts.py<br/>edge-tts VO +<br/>word timestamps"]
+    B --> C["assets.py<br/>search / score / download<br/>+ preview sheet"]
+    C --> D["bgm.py<br/>CC-BY music by mood<br/>(Commons mirror, cached)"]
+    D --> E["compose.py<br/>Pillow caption PNGs +<br/>core-ffmpeg composition"]
+    E --> F["check.py<br/>loudness, frames,<br/>attribution block"]
+    C -.->|"agent reviews assets_sheet.jpg,<br/>refetches bad scenes"| C
+    F -.->|"agent reviews contact_sheet.jpg,<br/>iterates"| A
 ```
-storyboard.json (agent 创作:文案/分镜/关键词/风格)
-   │
-   ├─ scripts/tts.py      edge-tts 配音 + 逐字时间戳
-   ├─ scripts/assets.py   多源素材搜索/评分/下载/校验 + 预览表(供 agent 目检)
-   ├─ scripts/bgm.py      按情绪取 CC-BY 配乐(Wikimedia Commons 镜像,本地缓存)
-   ├─ scripts/compose.py  Pillow 渲染字幕 PNG → ffmpeg 核心滤镜合成
-   │                      (Ken Burns/裁切/叠加/侧链闪避/loudnorm,无需 libass)
-   └─ scripts/check.py    时长/响度/逐帧预览表 + 素材署名块(供 agent 终审)
-```
 
-设计原则:**agent 干创意的活,脚本干机械的活**。脚本全部确定性、可单独重跑、
-可对单场景重抓素材(`assets.py --scene 3 --keywords "..."`),agent 通过看
-`assets_sheet.jpg` / `contact_sheet.jpg` 闭环把控质量。
+Design principle: **the agent does the creative work, deterministic scripts do the
+mechanical work.** Every stage can be rerun independently; single scenes can be
+refetched (`assets.py --scene 3 --keywords "..."`); the agent closes the quality
+loop by looking at `assets_sheet.jpg` / `contact_sheet.jpg` with its vision.
 
-## 分镜格式 / Storyboard schema
+No libass or drawtext needed — captions are rendered by Pillow and overlaid with
+core ffmpeg filters only, so it runs on minimal ffmpeg builds.
 
-见 [SKILL.md](SKILL.md) 的完整字段表,[examples/](examples/) 有三个实测通过的例子
-(中文悬念科普 / English listicle / 中文种草清单)。
+## Storyboard format
+
+See the full field table in [SKILL.md](SKILL.md); [examples/](examples/) contains
+three storyboards that produced the videos above.
 
 ## FAQ
 
-- **不装任何 key 能用吗?** 能。免 key 模式用图片素材 + Ken Burns 动效(经典营销号形态);
-  Pexels/Pixabay key 免费申请后自动启用实拍视频片段。
-- **支持哪些语言?** 中文和英文经过完整测试;edge-tts 支持的其他语言理论可用(欢迎 PR)。
-- **商用合规?** 素材全部来自 CC/公有领域源,`check.py` 会输出需随视频发布的署名文本;
-  Kevin MacLeod 音乐为 CC-BY(需署名)。请遵守各平台与素材许可条款。
-- **Linux 可用吗?** 可以(需系统 ffmpeg;emoji 字幕需安装 NotoColorEmoji,否则自动跳过 emoji)。
+- **Does it work without any API key?** Yes. Keyless mode uses CC images plus
+  Ken Burns motion (the classic faceless-channel look). Free Pexels/Pixabay keys
+  are auto-detected and unlock real stock footage.
+- **Which languages?** Chinese and English are fully tested; other edge-tts
+  languages should work in principle (PRs welcome).
+- **Commercial use?** All assets come from CC / public-domain sources and
+  `check.py` emits the attribution text to paste into your video description
+  (Kevin MacLeod music is CC-BY and requires it). Follow each platform's rules
+  and the individual asset licenses.
+- **Linux?** Works (system ffmpeg required; emoji captions need NotoColorEmoji,
+  otherwise emoji are skipped automatically).
 
 ## License
 
-代码 MIT([LICENSE](LICENSE))。生成视频中的第三方素材遵循其原始许可(署名信息见
-`review/report.txt`)。本项目仅供合法内容创作,请勿用于虚假信息或侵权内容。
+Code is MIT ([LICENSE](LICENSE)). Third-party media in generated videos keeps its
+original license — see the per-project `review/report.txt` attribution block.
+Use for legitimate content only; don't produce misinformation or infringing material.
