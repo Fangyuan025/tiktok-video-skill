@@ -42,21 +42,23 @@ Total 30–60s. One idea per scene. Never explain — assert.
 
 ## BGM 选择
 
-首选 `bgm.query` 风格搜索(数千首 CC 曲,选和内容气质契合的流行风格;配合默认开启的
-`beat_sync`,切镜会自动卡在节拍上——鼓点清晰的电子/说唱类卡点效果最好):
+**默认直接从 `mood` 表选**(upbeat funny inspiring chill tech mystery epic sad
+horror)——这批 Kevin MacLeod 曲子正是无数营销号/faceless 频道在用的"熟脸"配乐,
+观众听着就是"这类视频该有的声音";同一 mood 会按项目随机换曲,不会千篇一律。
 
-| 内容类型 | query 建议 | vibe 建议 |
-|---|---|---|
-| 盘点/悬念/猎奇 | "trap" / "phonk" | `"spedup"`(节奏更催) |
-| 种草/生活/vlog | "lofi chill" / "hip hop" | 不加或 `"slowed"` |
-| 励志/震撼/史诗 | "epic cinematic" | 不加 |
-| 科技/数码 | "electronic dance" / "synthwave" | 可加 `"spedup"` |
-| 搞笑/整活 | "quirky" | 不加 |
-| 情感/怀旧 | "chill" / "hip hop" | `"slowed"`(slowed+reverb) |
+**mood 表里没有贴合内容气质的,再用 `bgm.query` 去搜**(ccMixter/Jamendo 数千首
+CC 曲,自动用节拍器筛掉没鼓点的);配合默认开启的 `beat_sync`,切镜自动卡拍:
 
-`mood` 表(upbeat funny inspiring chill tech mystery epic sad horror)作兜底;
-用户指定的热门歌用 `bgm.file`(版权自负),或交付无 BGM 版由用户在抖音/TikTok
-上传时加平台曲库热歌(合法且有流量加成)。
+| 内容类型 | mood 首选 | 表内不合适时 query | vibe 建议 |
+|---|---|---|---|
+| 盘点/悬念/猎奇 | mystery | "trap" / "phonk" | `"spedup"`(节奏更催) |
+| 种草/生活/vlog | chill / upbeat | "lofi chill" / "hip hop" | 不加或 `"slowed"` |
+| 励志/震撼/史诗 | epic / inspiring | "epic cinematic" | 不加 |
+| 科技/数码 | tech | "electronic dance" | 可加 `"spedup"` |
+| 搞笑/整活 | funny | "quirky" | 不加 |
+| 情感/怀旧 | sad / chill | "chill" / "hip hop" | `"slowed"`(slowed+reverb) |
+
+用户指定的热门歌用 `bgm.file`(版权自负)。
 
 ## 视觉 / Visual planning per scene
 

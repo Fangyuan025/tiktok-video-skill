@@ -24,32 +24,45 @@ from common import (CACHE_DIR, SKILL_ROOT, audio_duration, die, download, http_g
 
 INCOMPETECH = "https://incompetech.com/music/royalty-free/mp3-royaltyfree/"
 
-# mood -> ordered candidates; each is a Wikimedia Commons file title
+# mood -> candidates (Wikimedia Commons file titles). These MacLeod staples
+# are the exact tracks countless faceless/营销号 channels run on — a proven
+# default. One is picked per project (seeded by title) so repeated use of the
+# same mood doesn't always sound identical; use bgm.query for wider variety.
 MOODS = {
     "upbeat": ["Monkeys Spinning Monkeys (ISRC USUAN1400011).mp3",
                "Kevin MacLeod - Carefree.ogg",
-               "Kevin MacLeod - Early Riser.ogg"],
+               "Kevin MacLeod - Early Riser.ogg",
+               "Kevin MacLeod - Smoother Move.ogg",
+               "Kevin MacLeod - Danse Morialta.ogg"],
     "funny": ["Sneaky Snitch (ISRC USUAN1100772).mp3",
               "Fluffing a Duck (ISRC USUAN1100768).mp3",
-              "Kevin MacLeod - Pixel Peeker Polka - faster.ogg"],
+              "Kevin MacLeod - Pixel Peeker Polka - faster.ogg",
+              "Kevin MacLeod - Scheming Weasel (faster).wav"],
     "inspiring": ["Kevin MacLeod - Clean Soul.ogg",
                   "Kevin MacLeod - Dream Culture.ogg",
-                  "Kevin MacLeod - Reaching Out.ogg"],
+                  "Kevin MacLeod - Reaching Out.ogg",
+                  "Kevin MacLeod - Inner Light.ogg",
+                  "Kevin MacLeod - Windswept.ogg"],
     "chill": ["Kevin MacLeod - Tranquility.ogg",
               "Kevin MacLeod - Autumn Day.ogg",
-              "Kevin MacLeod - Dream Culture.ogg"],
+              "Kevin MacLeod - Dream Culture.ogg",
+              "Kevin MacLeod - Snow Drop.ogg",
+              "Kevin MacLeod - Calmant.ogg"],
     "tech": ["Kevin MacLeod - Lift Motif.ogg",
              "Kevin MacLeod - Unity.ogg",
-             "Kevin MacLeod - Smoother Move.ogg"],
+             "Kevin MacLeod - Smoother Move.ogg",
+             "Stratosphere, (MacLeod, Kevin).oga"],
     "mystery": ["Kevin MacLeod - Ghost Dance.ogg",
                 "Sugar Plum Dark Mix (Kevin MacLeod) (ISRC USUAN1100623).oga",
                 "Investigations (ISRC USUAN1100646).mp3"],
     "epic": ["Kevin MacLeod - Call to Adventure.ogg",
              "Kevin MacLeod - Virtutes Instrumenti.ogg",
-             "Kevin MacLeod - Sovereign Quarter.ogg"],
+             "Kevin MacLeod - Sovereign Quarter.ogg",
+             "Kevin MacLeod - Enchanted Journey.ogg"],
     "sad": ["Kevin MacLeod - Mourning Song.ogg",
             "Kevin MacLeod - Winter Reflections.ogg",
-            "Kevin MacLeod - Resignation.ogg"],
+            "Kevin MacLeod - Resignation.ogg",
+            "Kevin MacLeod - Sonatina.ogg"],
     "horror": ["Kevin MacLeod - Horroriffic.ogg",
                "Kevin MacLeod - Ghost Dance.ogg",
                "Sugar Plum Dark Mix (Kevin MacLeod) (ISRC USUAN1100623).oga"],
@@ -58,8 +71,8 @@ MOODS = {
 
 def clean_name(file_title: str) -> str:
     n = re.sub(r"^(File:)?(Kevin MacLeod ?[-~] ?)?", "", file_title)
-    n = re.sub(r"\s*\((ISRC [^)]*|Kevin MacLeod)\)", "", n)
-    return re.sub(r"\.(ogg|oga|mp3|wav)$", "", n).strip()
+    n = re.sub(r"\s*\((ISRC [^)]*|Kevin MacLeod|MacLeod, Kevin)\)", "", n)
+    return re.sub(r"\.(ogg|oga|mp3|wav)$", "", n).strip(" ,")
 
 
 def commons_direct_url(file_title: str) -> str | None:
@@ -348,6 +361,11 @@ def main():
     if not titles:
         die(f"unknown mood '{mood}'. Available: {', '.join(MOODS)} | none, "
             f"or use a style query instead")
+    if not args.track:
+        # vary the pick across projects, reproducibly within one
+        import random
+        titles = list(titles)
+        random.Random(sb.get("title", "")).shuffle(titles)
     for t in titles:
         p = get_track(t)
         if p:
