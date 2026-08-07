@@ -45,13 +45,14 @@ Total 30–60s. One idea per scene. Never explain — assert.
 首选 `bgm.query` 风格搜索(数千首 CC 曲,选和内容气质契合的流行风格;配合默认开启的
 `beat_sync`,切镜会自动卡在节拍上——鼓点清晰的电子/说唱类卡点效果最好):
 
-| 内容类型 | query 建议 |
-|---|---|
-| 盘点/悬念/猎奇 | "dark trap beat" / "phonk" / "dark electronic" |
-| 种草/生活/vlog | "lofi hip hop" / "chill groove" |
-| 励志/震撼/史诗 | "epic cinematic" / "orchestral trailer" |
-| 科技/数码 | "synthwave" / "electronic dance" |
-| 搞笑/整活 | "quirky comedy" / "funny ukulele" |
+| 内容类型 | query 建议 | vibe 建议 |
+|---|---|---|
+| 盘点/悬念/猎奇 | "trap" / "phonk" | `"spedup"`(节奏更催) |
+| 种草/生活/vlog | "lofi chill" / "hip hop" | 不加或 `"slowed"` |
+| 励志/震撼/史诗 | "epic cinematic" | 不加 |
+| 科技/数码 | "electronic dance" / "synthwave" | 可加 `"spedup"` |
+| 搞笑/整活 | "quirky" | 不加 |
+| 情感/怀旧 | "chill" / "hip hop" | `"slowed"`(slowed+reverb) |
 
 `mood` 表(upbeat funny inspiring chill tech mystery epic sad horror)作兜底;
 用户指定的热门歌用 `bgm.file`(版权自负),或交付无 BGM 版由用户在抖音/TikTok

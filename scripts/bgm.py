@@ -20,7 +20,7 @@ import shutil
 from pathlib import Path
 
 from common import (CACHE_DIR, SKILL_ROOT, audio_duration, die, download, http_get,
-                    load_storyboard, log, project_paths)
+                    load_storyboard, log, project_paths, run)
 
 INCOMPETECH = "https://incompetech.com/music/royalty-free/mp3-royaltyfree/"
 
@@ -101,6 +101,53 @@ def get_track(file_title: str) -> Path | None:
     return dest
 
 
+# style words found in a query -> ccMixter tag sets (AND semantics, lic=open
+# guarantees commercial-safe CC). ccMixter is remix culture: real produced
+# beats with BPM metadata — much closer to a 抖音 sound than stock libraries.
+CCMIXTER_STYLES = [
+    (("phonk", "trap", "drift"), "trap,instrumental"),
+    (("hip", "hop", "rap", "boom"), "hip_hop,instrumental"),
+    (("lofi", "chill", "lo-fi", "mellow"), "chill,instrumental"),
+    (("edm", "dance", "club", "house"), "electronic,dance"),
+    (("synthwave", "retro", "electro"), "electronic,instrumental"),
+    (("epic", "cinematic", "orchestral", "trailer"), "cinematic"),
+    (("funny", "quirky", "comedy"), "quirky,instrumental"),
+]
+
+
+def ccmixter_search(query: str, n=15):
+    qtok = set(re.findall(r"[a-z]+", query.lower()))
+    tags = next((t for words, t in CCMIXTER_STYLES if qtok & set(words)), None)
+    if not tags:
+        return []
+    try:
+        r = http_get(f"http://ccmixter.org/api/query?f=json&tags={tags}&lic=open"
+                     f"&sort=rank&limit={n}", timeout=25)
+        out = []
+        for u in r.json():
+            mp3 = next((f.get("download_url") for f in u.get("files", [])
+                        if str(f.get("download_url", "")).endswith(".mp3")), None)
+            if not mp3:
+                continue
+            bpm = (u.get("upload_extra") or {}).get("bpm")
+            try:
+                bpm = float(bpm)
+            except (TypeError, ValueError):
+                bpm = None
+            if bpm and not 70 <= bpm <= 180:
+                continue
+            out.append({"url": mp3, "title": u.get("upload_name") or "", "dur": 0,
+                        "creator": u.get("user_name") or "",
+                        "license": u.get("license_name") or "CC BY",
+                        "source": u.get("file_page_url") or mp3,
+                        "meta_bpm": bpm, "provider": "ccmixter",
+                        "headers": {"Referer": "http://ccmixter.org/"}})
+        return out
+    except Exception as e:
+        log(f"[bgm] ccmixter error: {e}")
+        return []
+
+
 def openverse_audio(query: str, n=20):
     """CC music search (Jamendo etc.). Only remix-safe commercial licenses."""
     try:
@@ -132,34 +179,82 @@ def openverse_audio(query: str, n=20):
         return []
 
 
+BEAT_CONF_GATE = 3.0     # candidates below this rhythm confidence are rejected
+BEAT_BPM_RANGE = (75, 175)
+
+
 def get_query_track(query: str):
+    """Search ccMixter (style tags) + Openverse, then SCREEN candidates with
+    the beat tracker: a track only qualifies if it has a confident, danceable
+    beat grid — the objective filter that separates produced beat music from
+    stock ambience and vocal ballads. Returns (path, candidate, beats)."""
+    from beats import analyze
+
     cache = CACHE_DIR / "bgm"
     cache.mkdir(parents=True, exist_ok=True)
-    for c in openverse_audio(query)[:5]:
+    cands = (ccmixter_search(query) + openverse_audio(query))[:8]
+    best = None   # (confidence, path, cand, beats) fallback if nobody passes
+    for c in cands:
         ext = ".mp3" if ".mp3" in c["url"].lower() else ".ogg"
         dest = cache / (re.sub(r"[^A-Za-z0-9]+", "_", c["title"])[:40] + ext)
-        log(f"[bgm] trying: {c['title'][:44]!r} — {c['creator'][:24]} ({c['dur']:.0f}s)")
         if not (dest.exists() and dest.stat().st_size > 100_000):
-            if not download(c["url"], dest, max_bytes=60_000_000, attempts=3):
+            if not download(c["url"], dest, max_bytes=60_000_000, attempts=3,
+                            headers=c.get("headers")):
                 continue
         try:
             if audio_duration(dest) < 40:
                 dest.unlink(missing_ok=True)
                 continue
+            res = analyze(dest)
         except Exception:
             dest.unlink(missing_ok=True)
             continue
-        return dest, c
-    return None, None
+        ok = res["confidence"] >= BEAT_CONF_GATE and \
+            BEAT_BPM_RANGE[0] <= res["bpm"] <= BEAT_BPM_RANGE[1]
+        log(f"[bgm] candidate: {c['title'][:38]!r} [{c.get('provider','openverse')}] "
+            f"{res['bpm']:.0f}BPM conf={res['confidence']}"
+            + ("  ✓" if ok else "  (weak beat, skipping)"))
+        if ok:
+            return dest, c, res
+        if best is None or res["confidence"] > best[0]:
+            best = (res["confidence"], dest, c, res)
+    if best:
+        log("[bgm] no candidate passed the beat gate — using the strongest one")
+        return best[1], best[2], best[3]
+    return None, None, None
 
 
-def analyze_beats(paths, track_path, track_name):
+# 抖音 signature treatments. spedup ≈ 1.25x with raised pitch (the ubiquitous
+# "sped up" sound); slowed ≈ 0.88x with echo tail ("slowed + reverb").
+VIBES = {
+    "spedup": "aresample=48000,asetrate=48000*1.16,aresample=48000,atempo=1.08",
+    "slowed": "aresample=48000,asetrate=48000*0.88,aresample=48000,"
+              "aecho=0.7:0.65:60|110:0.30|0.22",
+}
+VIBE_SPEED = {"spedup": 1.16 * 1.08, "slowed": 0.88}
+
+
+def apply_vibe(paths, installed: Path, vibe: str) -> Path:
+    if vibe not in VIBES:
+        die(f"unknown vibe '{vibe}'. Available: {', '.join(VIBES)}")
+    out = paths["root"] / "bgm.m4a"
+    tmp = paths["root"] / "bgm_vibe_tmp.m4a"
+    run(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-i", installed,
+         "-af", VIBES[vibe], "-c:a", "aac", "-b:a", "192k", tmp])
+    for old in paths["root"].glob("bgm.*"):
+        old.unlink()
+    tmp.rename(out)
+    log(f"[bgm] vibe '{vibe}' applied")
+    return out
+
+
+def analyze_beats(paths, track_path, track_name, bpm_hint=None):
     """Beat-grid the installed BGM for cut-on-beat compose (best effort)."""
     out = paths["root"] / "bgm_beats.json"
     out.unlink(missing_ok=True)
     try:
         from beats import analyze
-        res = analyze(track_path)
+        res = analyze(track_path, bpm_hint=bpm_hint)
         res["track"] = track_name
         out.write_text(json.dumps(res))
         log(f"[bgm] beat grid: {res['bpm']} BPM, {len(res['beats'])} beats, "
@@ -181,8 +276,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("project_dir")
     ap.add_argument("--mood", help="override storyboard mood")
-    ap.add_argument("--query", help="style search on Openverse audio (e.g. \"trap beat\")")
+    ap.add_argument("--query", help="style search, e.g. \"trap\" \"lofi\" \"epic cinematic\"")
     ap.add_argument("--track", help="exact Wikimedia Commons file title")
+    ap.add_argument("--vibe", help="post-process: spedup | slowed")
     ap.add_argument("--list", action="store_true", help="list moods and exit")
     args = ap.parse_args()
     if args.list:
@@ -195,6 +291,21 @@ def main():
     paths = project_paths(args.project_dir)
     bgm_cfg = sb["bgm"]
     credit_file = paths["root"] / "bgm_credit.json"
+    vibe = args.vibe or bgm_cfg.get("vibe")
+
+    def finish(dest, track_name, beats_res=None):
+        if vibe:
+            hint = beats_res["bpm"] * VIBE_SPEED[vibe] if beats_res else None
+            dest = apply_vibe(paths, dest, vibe)
+            track_name = f"{track_name} ({vibe})"
+            analyze_beats(paths, dest, track_name, bpm_hint=hint)
+            return
+        if beats_res is not None:
+            beats_res["track"] = track_name
+            (paths["root"] / "bgm_beats.json").write_text(json.dumps(beats_res))
+            log(f"[bgm] beat grid: {beats_res['bpm']} BPM, confidence {beats_res['confidence']}")
+        else:
+            analyze_beats(paths, dest, track_name)
 
     if bgm_cfg.get("file") and not (args.query or args.mood or args.track):
         src = Path(bgm_cfg["file"]).expanduser()
@@ -208,19 +319,19 @@ def main():
         dest = install(paths, src)
         credit_file.write_text(json.dumps({"credit": f"Music: {src.name} (user-provided)"}))
         log(f"[bgm] using user file {src.name}")
-        analyze_beats(paths, dest, src.name)
+        finish(dest, src.name)
         return
 
     query = args.query or bgm_cfg.get("query")
     if query and not (args.mood or args.track):
-        p, c = get_query_track(query)
+        p, c, beats_res = get_query_track(query)
         if p:
             dest = install(paths, p)
             credit_file.write_text(json.dumps({
                 "credit": f'Music: "{c["title"]}" — {c["creator"]} ({c["license"]}), '
-                          f'via Openverse {c["source"]}'}))
+                          f'{c["source"]}'}))
             log(f"[bgm] ready: {c['title'][:48]} ({audio_duration(p):.0f}s)")
-            analyze_beats(paths, dest, c["title"])
+            finish(dest, c["title"], beats_res)
             return
         log(f"[bgm] no usable result for query '{query}' — falling back to mood table")
 
@@ -245,7 +356,7 @@ def main():
                 "credit": f'Music: "{clean_name(t)}" — Kevin MacLeod (incompetech.com), '
                           f"CC BY, via Wikimedia Commons"}))
             log(f"[bgm] ready: {clean_name(t)} ({audio_duration(p):.0f}s)")
-            analyze_beats(paths, dest, clean_name(t))
+            finish(dest, clean_name(t))
             return
     die("all bgm candidates failed to download — check network, or use bgm mood 'none' "
         "or drop a local mp3 into assets/bgm/ and set bgm.file")

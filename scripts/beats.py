@@ -47,7 +47,7 @@ def onset_envelope(y, n_fft=N_FFT, hop=HOP):
     return env / m if m > 0 else env
 
 
-def estimate_tempo(env, sr=SR, hop=HOP, lo=70, hi=180):
+def estimate_tempo(env, sr=SR, hop=HOP, lo=70, hi=180, bpm_hint=None):
     ac = np.correlate(env, env, mode="full")[len(env) - 1:]
     lag_lo = int(round(60 * sr / (hi * hop)))       # frames per beat at hi BPM
     lag_hi = int(round(60 * sr / (lo * hop)))
@@ -56,8 +56,13 @@ def estimate_tempo(env, sr=SR, hop=HOP, lo=70, hi=180):
         raise RuntimeError("audio too short for tempo estimation")
     lags = np.arange(lag_lo, lag_hi + 1)
     bpms = 60 * sr / (lags * hop)
-    # mild preference for the 90-150 BPM band where short-video edits live
-    weight = np.exp(-0.5 * ((np.log2(bpms / 120)) / 0.9) ** 2)
+    if bpm_hint:
+        # a known tempo (e.g. pre-vibe analysis x speed factor) resolves the
+        # classic 2x / 1.5x metrical-level ambiguity
+        weight = np.exp(-0.5 * ((np.log2(bpms / bpm_hint)) / 0.2) ** 2)
+    else:
+        # mild preference for the 90-150 BPM band where short-video edits live
+        weight = np.exp(-0.5 * ((np.log2(bpms / 120)) / 0.9) ** 2)
     li = int(np.argmax(ac[lag_lo:lag_hi + 1] * weight))
     l = lag_lo + li
     # parabolic interpolation around the peak -> sub-frame period, else the
@@ -92,10 +97,10 @@ def beat_grid(env, period_frames, sr=SR, hop=HOP):
     return [bf * hop / sr for bf in beats_f]
 
 
-def analyze(path):
+def analyze(path, bpm_hint=None):
     y = load_mono(path)
     env = onset_envelope(y)
-    bpm, period = estimate_tempo(env)
+    bpm, period = estimate_tempo(env, bpm_hint=bpm_hint)
     beats = beat_grid(env, period)
     # confidence: how much sharper the beat comb is vs average energy
     on = np.mean([env[min(int(round(t * SR / HOP)), len(env) - 1)] for t in beats])
