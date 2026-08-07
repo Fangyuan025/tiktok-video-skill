@@ -6,6 +6,7 @@
   "rate": "+10%",
   "caption_style": "karaoke",
   "bgm": {
+    "query": "dark electronic beat",
     "mood": "mystery",
     "gain_db": -16
   },

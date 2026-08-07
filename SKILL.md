@@ -69,7 +69,8 @@ Field reference:
 | `voice` | any edge-tts voice | zh: `zh-CN-YunjianNeural`(磁性男声) `zh-CN-XiaoxiaoNeural`(女声) `zh-CN-YunxiNeural`(阳光男声); en: `en-US-ChristopherNeural` `en-US-AriaNeural` `en-US-GuyNeural` |
 | `rate` | e.g. `+10%` | 营销号 pacing: zh `+8%`~`+15%`, en `+5%`~`+10%` |
 | `caption_style` | `karaoke` \| `pop` \| `none` | karaoke = word-by-word highlight (recommended) |
-| `bgm` | `{"mood": ...}` \| `{"file": "path.mp3"}` \| `{"mood":"none"}` | moods: upbeat funny inspiring chill tech mystery epic sad horror |
+| `bgm` | `{"query": "style words"}` \| `{"mood": ...}` \| `{"file": "path.mp3"}` \| `{"mood":"none"}` | **`query` searches thousands of CC tracks** (Openverse/Jamendo, ND/NC filtered out) — match the video's genre: 盘点/悬念 `"dark trap beat"`, 种草/生活 `"lofi hip hop"`, 励志/震撼 `"epic cinematic"`, 科技 `"synthwave electronic"`, 搞笑 `"quirky comedy"`. `mood` = curated fallback table (upbeat funny inspiring chill tech mystery epic sad horror). `file` = your own track — e.g. a trending sound the user is licensed to use |
+| `beat_sync` | `true` (default) \| `false` | the BGM is beat-analyzed and every scene/shot cut snaps onto the beat grid (卡点) when the grid is confident; VO is never truncated, only the breathing pads flex |
 | `hook` | `{"text","seconds"}` | big top title card shown at the start, ≤ 8 chars/words |
 | `sticky_title` | `{"text": ...}` | optional persistent topic bar at the top; off by default — only add if the user asks for one |
 | `sfx` | `true` (default) \| `false` | whoosh sound on scene transitions |
@@ -136,6 +137,15 @@ user together with `final.mp4`.
 - `edge-tts` network errors: it retries 4×; rerun `tts.py` if it still fails.
 - BGM download fails: rerun `bgm.py` (retries + cache), or `--mood none`,
   or drop an mp3 into `assets/bgm/` and set `bgm.file`.
+- BGM style doesn't fit: refine the query (`bgm.py <dir> --query "..."` then
+  recompose with `--skip-tts --skip-assets`). For a *真正的当下热门* sound,
+  deliver with `mood: none` (or low gain) and tell the user to add the
+  trending track from TikTok/抖音's in-app licensed music library at upload
+  time — that is both legal and algorithm-favored. Cut timing will still be
+  clean because scene pacing is unchanged.
+- `check.py` prints a "cuts land on the beat" line — if beat sync was skipped
+  (low grid confidence, e.g. beatless ambient music), pick a steadier track
+  (`--query "trap beat"` etc.) and recompose.
 - A provider erroring/empty is fine — others cover it; check per-scene logs.
 - Recompose after any storyboard edit is cheap (`--skip-tts --skip-assets`
   via pipeline.py, or run compose.py directly). Changing scene *text*

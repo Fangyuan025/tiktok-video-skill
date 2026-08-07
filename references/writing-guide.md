@@ -40,10 +40,22 @@ Total 30–60s. One idea per scene. Never explain — assert.
 - en authoritative/docu: `en-US-ChristopherNeural` +5%
 - en energetic/listicle: `en-US-AriaNeural` +8%,  deep hype: `en-US-GuyNeural`
 
-## BGM moods
+## BGM 选择
 
-mystery(悬念/深海/历史) · upbeat(清单/种草) · funny(搞笑) · inspiring(励志/科技愿景) ·
-tech(科技/数码) · epic(震撼) · chill(生活方式) · sad(情感)
+首选 `bgm.query` 风格搜索(数千首 CC 曲,选和内容气质契合的流行风格;配合默认开启的
+`beat_sync`,切镜会自动卡在节拍上——鼓点清晰的电子/说唱类卡点效果最好):
+
+| 内容类型 | query 建议 |
+|---|---|
+| 盘点/悬念/猎奇 | "dark trap beat" / "phonk" / "dark electronic" |
+| 种草/生活/vlog | "lofi hip hop" / "chill groove" |
+| 励志/震撼/史诗 | "epic cinematic" / "orchestral trailer" |
+| 科技/数码 | "synthwave" / "electronic dance" |
+| 搞笑/整活 | "quirky comedy" / "funny ukulele" |
+
+`mood` 表(upbeat funny inspiring chill tech mystery epic sad horror)作兜底;
+用户指定的热门歌用 `bgm.file`(版权自负),或交付无 BGM 版由用户在抖音/TikTok
+上传时加平台曲库热歌(合法且有流量加成)。
 
 ## 视觉 / Visual planning per scene
 
