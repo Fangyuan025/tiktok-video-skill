@@ -95,9 +95,10 @@ three storyboards that produced the videos above.
 
 ## FAQ
 
-- **Does it work without any API key?** Yes. Keyless mode uses CC images plus
-  Ken Burns motion (the classic faceless-channel look). Free Pexels/Pixabay keys
-  are auto-detected and unlock real stock footage.
+- **Does it work without any API key?** Yes — including real video footage
+  (Wikimedia Commons clips, NASA video, Prelinger historical film) plus CC
+  images with Ken Burns motion. Free Pexels/Pixabay keys are auto-detected and
+  add modern lifestyle stock clips on top.
 - **Which languages?** Chinese and English are fully tested; other edge-tts
   languages should work in principle (PRs welcome).
 - **Commercial use?** All assets come from CC / public-domain sources and

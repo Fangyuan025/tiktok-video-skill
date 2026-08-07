@@ -90,8 +90,9 @@ flowchart LR
 
 ## FAQ
 
-- **不装任何 key 能用吗?** 能。免 key 模式用 CC 图片 + Ken Burns 动效(经典营销号形态);
-  Pexels/Pixabay 免费 key 配好后自动启用实拍视频片段。
+- **不装任何 key 能用吗?** 能,而且包含实拍视频(Wikimedia Commons 视频、NASA 视频、
+  Prelinger 历史胶片)+ CC 图片 Ken Burns 动效;Pexels/Pixabay 免费 key 配好后
+  额外补充现代生活方式类实拍库存片段。
 - **支持哪些语言?** 中文和英文经过完整测试;edge-tts 支持的其他语言理论可用(欢迎 PR)。
 - **商用合规?** 素材全部来自 CC/公有领域源,`check.py` 会输出需随视频发布的署名文本
   (Kevin MacLeod 音乐为 CC-BY,必须署名)。请遵守各平台与素材许可条款。
