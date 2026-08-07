@@ -72,10 +72,11 @@ def main(project_dir):
     credits = []
     if paths["manifest"].exists():
         for mft in json.loads(paths["manifest"].read_text()):
-            if mft["provider"] in ("local",):
-                continue
-            c = f"{mft['title'][:60]}".strip() or mft["file"]
-            credits.append(f"  - {c} — {mft.get('creator','')} ({mft.get('license','')}) {mft.get('source','')}")
+            for s in mft.get("shots") or [mft]:
+                if s.get("provider") == "local":
+                    continue
+                c = f"{s.get('title','')[:60]}".strip() or s.get("file", "")
+                credits.append(f"  - {c} — {s.get('creator','')} ({s.get('license','')}) {s.get('source','')}")
     bgm_credit = ""
     bc = paths["root"] / "bgm_credit.json"
     if bc.exists():

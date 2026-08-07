@@ -198,17 +198,25 @@ def load_storyboard(project_dir) -> dict:
     hook = sb.get("hook")
     if hook and not hook.get("text"):
         sb["hook"] = None
+    sb.setdefault("sfx", True)          # whoosh on scene transitions
+    st = sb.get("sticky_title")
+    if st and not st.get("text"):
+        sb["sticky_title"] = None
+    sb.setdefault("sticky_title", None)
 
     for i, sc in enumerate(sb["scenes"], 1):
         if not sc.get("text", "").strip():
             die(f"scene {i} has empty text")
-        sc.setdefault("keywords", [])
+        kw = sc.setdefault("keywords", [])
+        if isinstance(kw, str):
+            sc["keywords"] = [kw]
         sc.setdefault("effect", "auto")
         if sc["effect"] not in ("auto", "kb_in", "kb_out", "pan_left", "pan_right", "static"):
             die(f"scene {i}: bad effect '{sc['effect']}'")
         sc.setdefault("emphasis", [])
         sc.setdefault("media", None)
         sc.setdefault("providers", None)
+        sc.setdefault("badge", None)
     return sb
 
 

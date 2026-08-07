@@ -35,7 +35,7 @@ pacing, scene structure). Then create `projects/<slug>/storyboard.json`:
 
 ```json
 {
-  "title": "深海里最诡异的3种生物",
+  "title": "深海里最诡异的5种生物",
   "lang": "zh",
   "aspect": "9:16",
   "voice": "zh-CN-YunjianNeural",
@@ -43,12 +43,19 @@ pacing, scene structure). Then create `projects/<slug>/storyboard.json`:
   "caption_style": "karaoke",
   "bgm": {"mood": "mystery", "gain_db": -16},
   "hook": {"text": "深海禁区", "seconds": 2.3},
+  "sticky_title": {"text": "深海最诡异生物 TOP5"},
   "scenes": [
     {
       "text": "你知道吗?在阳光永远照不到的深海,藏着比科幻电影更诡异的生物。",
-      "keywords": ["deep sea NOAA ocean exploration"],
+      "keywords": ["deep sea NOAA ocean exploration", "submarine dark ocean"],
       "providers": ["openverse", "wikimedia"],
+      "badge": null,
       "effect": "kb_in"
+    },
+    {
+      "text": "第一名,鮟鱇鱼……",
+      "keywords": ["humpback anglerfish", "anglerfish museum"],
+      "badge": "第1名"
     }
   ]
 }
@@ -65,14 +72,19 @@ Field reference:
 | `caption_style` | `karaoke` \| `pop` \| `none` | karaoke = word-by-word highlight (recommended) |
 | `bgm` | `{"mood": ...}` \| `{"file": "path.mp3"}` \| `{"mood":"none"}` | moods: upbeat funny inspiring chill tech mystery epic sad horror |
 | `hook` | `{"text","seconds"}` | big top title card shown at the start, ≤ 8 chars/words |
-| scene `keywords` | **English, concrete nouns** | see search tips below |
+| `sticky_title` | `{"text": ...}` | small persistent topic bar at the top for the whole video |
+| `sfx` | `true` (default) \| `false` | whoosh sound on scene transitions |
+| scene `keywords` | list of **English, concrete-noun** queries | **each entry = one shot (visual)**; the video cuts to a new visual every ~3s, so give 2–3 queries for scenes longer than ~4s (extra shots are auto-added cycling your queries if you give fewer) |
+| scene `badge` | e.g. `"第1名"` / `"TOP 1"` | big stamped label shown at the scene start — use for listicles |
 | scene `providers` | list | keyless: `openverse` `wikimedia` `nasa`; with keys: `pexels_video` `pexels_photo` `pixabay_video` |
-| scene `effect` | `auto` `kb_in` `kb_out` `pan_left` `pan_right` `static` | Ken Burns motion for images |
+| scene `effect` | `auto` `kb_in` `kb_out` `pan_left` `pan_right` `static` | first shot's Ken Burns motion; later shots auto-cycle |
 | scene `emphasis` | list of substrings | permanently highlighted words (pop style) |
 | scene `media` | file path | bypass search, use your own file (e.g. one you downloaded yourself) |
 
-Rules of thumb: 4–7 scenes, one idea per scene, total 30–60s. Scene text
-15–40 Chinese chars / 10–25 English words.
+**Rules of thumb (publish bar): total 45–75s, 6–9 scenes, one idea per scene,
+2–3 shots per scene.** Scene text 20–45 Chinese chars / 14–30 English words.
+Anything under ~40s or with single-shot scenes throughout will feel thin — don't
+ship it.
 
 ### 2. Run the pipeline
 
@@ -88,10 +100,11 @@ Free-image search is imperfect. **Always view these two files with your image
 tool and judge them like a human editor:**
 
 1. `projects/<slug>/media/assets_sheet.jpg` — after the assets stage.
-   For every scene whose image does not clearly match the narration, refetch:
+   Shots are labeled `01a 01b 02a …`. For every shot that does not clearly
+   match the narration, refetch it:
 
    ```bash
-   .venv/bin/python scripts/assets.py projects/<slug> --scene 3 --keywords "better english nouns"
+   .venv/bin/python scripts/assets.py projects/<slug> --scene 3 --shot 2 --keywords "better english nouns"
    ```
 
    (Refetching automatically blacklists the rejected asset. Repeat until all
