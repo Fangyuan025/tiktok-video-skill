@@ -145,6 +145,41 @@ def _download_once(url: str, dest: Path, max_bytes: int, headers: dict | None) -
         return False
 
 
+TITLE_GENERIC = {"night", "day", "dark", "light", "lights", "running", "run", "fast", "close",
+                 "closeup", "view", "silhouette", "background", "old", "big", "small", "little",
+                 "photo", "image", "detail"}
+
+
+def title_audit(sb: dict, manifest: list) -> list:
+    """(scene_i, shot_j, title) triples whose asset title shares no meaningful
+    word with the scene's keywords — how a text-only agent spots an off-topic
+    stock pick (an oil painting, an archival boat photo) without seeing a
+    single pixel. Word-prefix matching covers plurals (cat/cats, eye/eyes);
+    the shot is compared against the union of the scene's queries so a shot
+    matching a sibling query never false-flags."""
+    flags = []
+    scenes = sb.get("scenes", [])
+    for m in manifest:
+        if not (1 <= m.get("i", 0) <= len(scenes)):
+            continue
+        kw = " ".join(scenes[m["i"] - 1].get("keywords", []))
+        scene_strong = {t for t in re.findall(r"[a-z]+", kw.lower()) if len(t) >= 3} - TITLE_GENERIC
+        for j, s in enumerate(m.get("shots") or [m], 1):
+            if s.get("provider") == "local":
+                continue
+            # A refetched shot records the query that actually chose it —
+            # judge against that, or the agent's hand-picked override would
+            # flag forever against the storyboard's original words.
+            own = {t for t in re.findall(r"[a-z]+", str(s.get("query", "")).lower()) if len(t) >= 3} - TITLE_GENERIC
+            strong = own or scene_strong
+            if not strong:
+                continue
+            title = set(re.findall(r"[a-z]+", str(s.get("title", "")).lower()))
+            if not any(t.startswith(k) or k.startswith(t) for k in strong for t in title):
+                flags.append((m["i"], j, str(s.get("title", ""))[:70]))
+    return flags
+
+
 def project_paths(project_dir) -> dict:
     p = Path(project_dir).resolve()
     return {

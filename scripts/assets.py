@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 
 from common import (ASPECTS, die, download, ensure_dirs, http_get, load_storyboard, log,
-                    media_info, project_paths)
+                    media_info, project_paths, title_audit)
 
 MIN_SHORT_SIDE = 620
 PEXELS_KEY = os.environ.get("PEXELS_API_KEY", "").strip()
@@ -315,7 +315,7 @@ def fetch_shot(i, j, query, scene, sb, paths, excluded, used_urls, used_hashes):
         used_urls.add(c["url"])
         used_hashes.add(digest)
         return {"file": dest.name, "kind": kind, "w": w, "h": h, "dur": round(dur, 2),
-                "sha1": digest,
+                "sha1": digest, "query": query,
                 **{k: c[k] for k in ("provider", "title", "creator", "license", "source", "url")}}
     die(f"scene {i} shot {j}: no usable asset for query '{query}'. Try: "
         f"python scripts/assets.py <dir> --scene {i} --shot {j} --keywords \"other english nouns\"")
@@ -479,6 +479,12 @@ def main():
         # rerun (or --scene refetch) resumes instead of redownloading
         manifest = save_state()
 
+    # Flag off-topic picks NOW, before a compose cycle is spent on them —
+    # for a text-only agent these lines ARE the asset review. Before the
+    # sheet build so a sheet failure can never eat the flags.
+    for i, j, t in title_audit(sb, manifest):
+        log(f'[assets] [!] scene {i} shot {j}: "{t}" looks OFF-TOPIC for its keywords — refetch it '
+            f'with --scene {i} --shot {j} --keywords "<concrete english nouns>" before composing')
     build_sheet(manifest, paths, sb)
     n = sum(len(m["shots"]) for m in manifest)
     log(f"[assets] done: {n} shots across {len(manifest)} scenes. "

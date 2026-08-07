@@ -9,10 +9,11 @@ Usage: python scripts/check.py <project_dir>
 """
 import json
 import math
+import os
 import re
 import sys
 
-from common import die, ffprobe_json, load_storyboard, log, project_paths, run
+from common import die, ffprobe_json, load_storyboard, log, project_paths, run, title_audit
 
 
 def fps_of(v):
@@ -68,10 +69,14 @@ def main(project_dir):
     run(["ffmpeg", "-y", "-loglevel", "error", "-ss", "0.4", "-i", final,
          "-frames:v", "1", paths["review"] / "cover.jpg"])
 
-    # attribution block
+    # attribution block + title audit (the blind-model lifeline — see
+    # common.title_audit; assets.py flags the same thing earlier).
     credits = []
+    title_flags = []
     if paths["manifest"].exists():
-        for mft in json.loads(paths["manifest"].read_text()):
+        manifest = json.loads(paths["manifest"].read_text())
+        title_flags = title_audit(sb, manifest)
+        for mft in manifest:
             for s in mft.get("shots") or [mft]:
                 if s.get("provider") == "local":
                     continue
@@ -94,6 +99,13 @@ def main(project_dir):
         f"[{'x' if 20 <= dur <= 95 else '!'}] duration in short-form range (20–95s)",
         f"[{'x' if a else '!'}] has audio stream",
         f"[{'x' if lufs != '?' and abs(float(lufs) + 15) < 2.5 else '!'}] loudness near target",
+        f"[{'x' if not title_flags else '!'}] asset titles match scene keywords",
+        *[
+            f'    [!] scene {i} shot {j}: "{t}" looks OFF-TOPIC for its keywords — refetch it:\n'
+            f'        {sys.executable} {os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets.py")}'
+            f' {sys.argv[1]} --scene {i} --shot {j} --keywords "<concrete english nouns>"  # then recompose'
+            for i, j, t in title_flags
+        ],
         "",
         "== attribution (paste into video description) ==",
         bgm_credit,
@@ -104,6 +116,10 @@ def main(project_dir):
     print(report)
     log("\n[check] NOW view review/contact_sheet.jpg with your image tool and verify: "
         "captions readable & correctly timed, assets match the narration, no black/blank frames.")
+    if title_flags:
+        log("[check] EVERY [!] line above must be resolved before delivery — if you cannot "
+            "actually see images, the OFF-TOPIC title flags ARE your review: refetch those "
+            "shots with better keywords, then recompose (--skip-tts --skip-assets) and recheck.")
 
 
 if __name__ == "__main__":

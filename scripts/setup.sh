@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # One-time setup for the tiktok-video skill: venv + deps + CJK font.
-# Idempotent — safe to rerun.
+# Idempotent — safe to rerun. The font is kept in the machine-wide cache
+# (~/.cache/tiktok-video-skill) so a fresh workspace doesn't re-download it.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -23,11 +24,19 @@ echo "[setup] installing python deps…"
 
 mkdir -p assets/fonts assets/bgm
 FONT=assets/fonts/NotoSansCJKsc-Black.otf
+CACHE="${TIKTOK_SKILL_CACHE:-$HOME/.cache/tiktok-video-skill}"
+CACHED_FONT="$CACHE/fonts/NotoSansCJKsc-Black.otf"
 if [ ! -s "$FONT" ]; then
-  echo "[setup] downloading Noto Sans CJK SC Black (~17MB, one time)…"
-  curl -fsSL -o "$FONT" \
-    "https://github.com/notofonts/noto-cjk/raw/main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Black.otf" \
-    || { echo "font download failed — retry or place any bold CJK .otf at $FONT"; exit 1; }
+  if [ -s "$CACHED_FONT" ]; then
+    echo "[setup] font from cache…"
+    cp "$CACHED_FONT" "$FONT"
+  else
+    echo "[setup] downloading Noto Sans CJK SC Black (~17MB, one time)…"
+    curl -fsSL -o "$FONT" \
+      "https://github.com/notofonts/noto-cjk/raw/main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Black.otf" \
+      || { echo "font download failed — retry or place any bold CJK .otf at $FONT"; exit 1; }
+    mkdir -p "$CACHE/fonts" && cp "$FONT" "$CACHED_FONT" || true
+  fi
 fi
 
 .venv/bin/python - <<'EOF'
