@@ -160,6 +160,11 @@ user together with `final.mp4`.
   Gewitter", "tormenta rayos"). Prefer named subjects ("Fagradalsfjall lava
   drone") over generic nouns, and always eyeball video thumbs in the sheet:
   watch out for burned-in captions, watermarks, tutorials and CGI promos.
+- **Chinese street footage recipe**: Commons has a whole walking-tour genre —
+  query `"Walking China <city>"`, `"Riding a street in <city>"`, or a
+  specific place (`"Huaqiangbei electronics market"`). Category search also
+  works: `incategory:"Videos of Shanghai"`. Note the files are titled in
+  ENGLISH — querying in Chinese finds almost nothing.
 
 ### Troubleshooting
 
