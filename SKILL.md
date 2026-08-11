@@ -30,6 +30,15 @@ bash scripts/setup.sh
 
 ### 1. VERIFY FACTS FIRST, then write the script + storyboard
 
+**Language rule — decide before anything else.** The video's language = the
+language of the **user's brief** (or the target audience they explicitly
+named), NEVER the language of this document or its examples. An English
+request → `lang: "en"`, English script, hook, badges ("No.1"/"TOP 1") and CTA,
+en-US voice, TikTok conventions. A Chinese request → `lang: "zh"`, 抖音
+conventions ("第1名"). If the user names a target market ("给美国观众" /
+"for Chinese viewers"), that overrides the brief's language. The pipeline
+refuses to run if `lang` is missing — there is no default.
+
 **Your internal knowledge may be outdated or wrong — never put an unverified
 claim in a video.** Before writing any scene text, use your web search tool to
 check every concrete claim: numbers, statistics, records, prices, dates,
@@ -80,7 +89,7 @@ Field reference:
 
 | field | values | notes |
 |---|---|---|
-| `lang` | `zh` \| `en` | sets caption grouping + default voice |
+| `lang` | `zh` \| `en` (**required**) | = the user's brief/audience language (see Language rule above); sets caption grouping + default voice |
 | `aspect` | `9:16` (default) \| `16:9` \| `1:1` | |
 | `voice` | any edge-tts voice | zh: `zh-CN-YunjianNeural`(磁性男声) `zh-CN-XiaoxiaoNeural`(女声) `zh-CN-YunxiNeural`(阳光男声); en: `en-US-ChristopherNeural` `en-US-AriaNeural` `en-US-GuyNeural` |
 | `rate` | e.g. `+10%` | 营销号 pacing: zh `+8%`~`+15%`, en `+5%`~`+10%` |
